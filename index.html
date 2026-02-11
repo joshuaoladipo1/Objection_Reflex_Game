@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Objection Reflex Game</title>
+    <meta name="description" content="Speed + Classification + Clean Response">
+    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiT2JqZWN0aW9uIFJlZmxleCIsInNob3J0X25hbWUiOiJSZWZsZXgiLCJzdGFydF91cmwiOiIuIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiIzBmMTcyYSIsInRoZW1lX2NvbG9yIjoiIzEwYjk4MSJ9">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #1e293b;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 0.95rem;
+        }
+
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: #1e293b;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #10b981;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .game-setup {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .difficulty-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .difficulty-btn {
+            padding: 16px;
+            background: #0f172a;
+            border: 2px solid #334155;
+            border-radius: 8px;
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .difficulty-btn:hover {
+            border-color: #10b981;
+            color: #10b981;
+        }
+
+        .difficulty-btn.active {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border-color: #10b981;
+            color: white;
+        }
+
+        .timer-selector {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: #cbd5e1;
+            font-weight: 500;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            margin-bottom: 8px;
+        }
+
+        .timer-value {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        button {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        button:disabled {
+            background: #334155;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .game-screen {
+            display: none;
+        }
+
+        .game-screen.active {
+            display: block;
+        }
+
+        .combo-display {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 16px;
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            border-radius: 12px;
+        }
+
+        .combo-number {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .combo-label {
+            color: #fbbf24;
+            font-weight: 600;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .timer-display {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 30px;
+        }
+
+        .timer-circle {
+            width: 100%;
+            height: 100%;
+        }
+
+        .timer-bg {
+            fill: none;
+            stroke: #1e293b;
+            stroke-width: 8;
+        }
+
+        .timer-progress {
+            fill: none;
+            stroke: #10b981;
+            stroke-width: 8;
+            stroke-linecap: round;
+            transform: rotate(-90deg);
+            transform-origin: center;
+            transition: stroke-dashoffset 0.1s linear;
+        }
+
+        .timer-progress.warning {
+            stroke: #f59e0b;
+        }
+
+        .timer-progress.danger {
+            stroke: #ef4444;
+        }
+
+        .timer-number {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3rem;
+            font-weight: 800;
+            color: #10b981;
+        }
+
+        .timer-number.warning {
+            color: #f59e0b;
+        }
+
+        .timer-number.danger {
+            color: #ef4444;
+            animation: shake 0.5s ease-in-out infinite;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+            25% { transform: translate(-50%, -50%) rotate(-3deg); }
+            75% { transform: translate(-50%, -50%) rotate(3deg); }
+        }
+
+        .objection-card {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 24px;
+            text-align: center;
+            border-left: 4px solid #10b981;
+        }
+
+        .objection-text {
+            font-size: 1.3rem;
+            line-height: 1.6;
+            color: #f1f5f9;
+            font-style: italic;
+            margin-bottom: 16px;
+        }
+
+        .objection-context {
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+
+        .response-area {
+            margin-bottom: 24px;
+        }
+
+        textarea {
+            width: 100%;
+            background: #0f172a;
+            border: 2px solid #334155;
+            border-radius: 8px;
+            padding: 16px;
+            color: #e2e8f0;
+            font-size: 1rem;
+            font-family: inherit;
+            min-height: 100px;
+            resize: vertical;
+            transition: border-color 0.2s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #10b981;
+        }
+
+        .word-count {
+            text-align: right;
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-top: 8px;
+        }
+
+        .word-count.warning {
+            color: #f59e0b;
+        }
+
+        .word-count.danger {
+            color: #ef4444;
+            font-weight: 600;
+        }
+
+        .result-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .result-overlay.active {
+            display: flex;
+        }
+
+        .result-card {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .result-grade {
+            text-align: center;
+            font-size: 5rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .result-grade.perfect { color: #10b981; }
+        .result-grade.good { color: #3b82f6; }
+        .result-grade.ok { color: #f59e0b; }
+        .result-grade.poor { color: #ef4444; }
+
+        .result-breakdown {
+            margin: 24px 0;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #0f172a;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .result-item-label {
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        .result-item-value {
+            font-weight: 600;
+            color: #10b981;
+        }
+
+        .feedback-section {
+            background: #0f172a;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+        }
+
+        .feedback-section h3 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+
+        .feedback-section p {
+            color: #cbd5e1;
+            line-height: 1.6;
+        }
+
+        .result-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn-secondary {
+            background: #334155;
+        }
+
+        .btn-secondary:hover {
+            background: #475569;
+            transform: translateY(-2px);
+        }
+
+        .session-summary {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 24px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+        }
+
+        .summary-item {
+            text-align: center;
+            padding: 16px;
+            background: #0f172a;
+            border-radius: 8px;
+        }
+
+        .summary-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #10b981;
+            margin-bottom: 4px;
+        }
+
+        .summary-label {
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #1e293b;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            transition: width 0.3s ease;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 12px;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .objection-text {
+                font-size: 1.1rem;
+            }
+
+            .result-grade {
+                font-size: 4rem;
+            }
+
+            .result-actions {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚡ Objection Reflex Game</h1>
+            <p class="subtitle">Doctrine-Aligned Grading: Disqualification > Persuasion</p>
+        </header>
+
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="stat-value" id="todayReps">0</div>
+                <div class="stat-label">Today's Reps</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="currentStreak">0</div>
+                <div class="stat-label">Streak</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="personalBest">0</div>
+                <div class="stat-label">Best Combo</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="avgScore">0</div>
+                <div class="stat-label">Avg Score</div>
+            </div>
+        </div>
+
+        <!-- Setup Screen -->
+        <div id="setupScreen">
+            <div class="game-setup">
+                <label>Difficulty</label>
+                <div class="difficulty-selector">
+                    <div class="difficulty-btn active" onclick="selectDifficulty('beginner')" data-difficulty="beginner">
+                        <div style="font-weight: 600; margin-bottom: 4px;">Beginner</div>
+                        <div style="font-size: 0.75rem; color: #64748b;">Clear signals</div>
+                    </div>
+                    <div class="difficulty-btn" onclick="selectDifficulty('intermediate')" data-difficulty="intermediate">
+                        <div style="font-weight: 600; margin-bottom: 4px;">Intermediate</div>
+                        <div style="font-size: 0.75rem; color: #64748b;">Ambiguous</div>
+                    </div>
+                    <div class="difficulty-btn" onclick="selectDifficulty('advanced')" data-difficulty="advanced">
+                        <div style="font-weight: 600; margin-bottom: 4px;">Advanced</div>
+                        <div style="font-size: 0.75rem; color: #64748b;">Hostile tone</div>
+                    </div>
+                    <div class="difficulty-btn" onclick="selectDifficulty('elite')" data-difficulty="elite">
+                        <div style="font-weight: 600; margin-bottom: 4px;">Elite</div>
+                        <div style="font-size: 0.75rem; color: #64748b;">Brutal</div>
+                    </div>
+                </div>
+
+                <div class="timer-selector">
+                    <label>Response Time Limit</label>
+                    <input type="range" id="timerRange" min="5" max="20" value="10" step="1" oninput="updateTimerValue()">
+                    <div class="timer-value"><span id="timerValue">10</span> seconds</div>
+                </div>
+
+                <button onclick="startGame()">Start Session</button>
+                <button class="btn-secondary" onclick="testConnection()" style="margin-top: 12px;">Test API Connection</button>
+                
+                <!-- Doctrine Quick Reference -->
+                <div style="margin-top: 32px; padding: 20px; background: rgba(139, 92, 246, 0.1); border-radius: 8px; border: 1px solid rgba(139, 92, 246, 0.3);">
+                    <h3 style="color: #8b5cf6; margin-bottom: 12px; font-size: 1rem;">📖 The Sales Doctrine</h3>
+                    <ul style="font-size: 0.85rem; line-height: 1.8; color: #cbd5e1; list-style: none; padding-left: 0;">
+                        <li style="margin-bottom: 8px;">✓ <strong>Disqualification > Persuasion</strong> - Walk away from bad fits</li>
+                        <li style="margin-bottom: 8px;">✓ <strong>Diagnosis > Pitching</strong> - Understand before offering</li>
+                        <li style="margin-bottom: 8px;">✓ <strong>Question-Driven</strong> - Ask, don't tell</li>
+                        <li style="margin-bottom: 8px;">✓ <strong>Root Cause Thinking</strong> - Surface vs real problem</li>
+                        <li style="margin-bottom: 8px;">✓ <strong>Economic Buyer Focus</strong> - Talk to decision-makers</li>
+                        <li style="margin-bottom: 8px;">✓ <strong>No Free Consulting</strong> - Information has value</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="gameScreen" class="game-screen">
+            <div id="comboDisplay" class="combo-display" style="display: none;">
+                <div class="combo-number" id="comboNumber">0</div>
+                <div class="combo-label">COMBO!</div>
+            </div>
+
+            <div class="timer-display">
+                <svg class="timer-circle" viewBox="0 0 160 160">
+                    <circle class="timer-bg" cx="80" cy="80" r="70"></circle>
+                    <circle class="timer-progress" id="timerProgress" cx="80" cy="80" r="70" 
+                            stroke-dasharray="440" stroke-dashoffset="0"></circle>
+                </svg>
+                <div class="timer-number" id="timerNumber">10</div>
+            </div>
+
+            <div class="objection-card">
+                <div class="objection-text" id="objectionText">Loading...</div>
+                <div class="objection-context" id="objectionContext"></div>
+            </div>
+
+            <div class="response-area">
+                <label>Your Response</label>
+                <textarea id="responseInput" placeholder="Type your response here..." oninput="updateWordCount()"></textarea>
+                <div class="word-count"><span id="wordCount">0</span> words</div>
+            </div>
+
+            <button id="submitBtn" onclick="submitResponse()">Submit Response</button>
+            <button class="btn-secondary" onclick="endSession()" style="margin-top: 12px;">End Session</button>
+        </div>
+
+        <!-- Result Overlay -->
+        <div id="resultOverlay" class="result-overlay">
+            <div class="result-card">
+                <div class="result-grade" id="resultGrade">A</div>
+                
+                <div class="result-breakdown">
+                    <div class="result-item">
+                        <span class="result-item-label">Response Time</span>
+                        <span class="result-item-value" id="resultTime">0s</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-item-label">Doctrine Alignment</span>
+                        <span class="result-item-value" id="resultDoctrine">—</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-item-label">Root Cause Diagnosis</span>
+                        <span class="result-item-value" id="resultRootCause">—</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-item-label">Execution</span>
+                        <span class="result-item-value" id="resultExecution">—</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-item-label">Question Quality</span>
+                        <span class="result-item-value" id="resultQuestion">—</span>
+                    </div>
+                </div>
+
+                <div class="feedback-section">
+                    <h3>What You Did</h3>
+                    <p id="feedbackWhat"></p>
+                </div>
+
+                <div class="feedback-section">
+                    <h3>Better Move</h3>
+                    <p id="feedbackBetter"></p>
+                </div>
+
+                <div class="feedback-section" style="background: rgba(139, 92, 246, 0.1); border-left: 3px solid #8b5cf6;">
+                    <h3>Doctrine Analysis</h3>
+                    <p id="feedbackDoctrine"></p>
+                </div>
+
+                <div class="result-actions">
+                    <button class="btn-secondary" onclick="closeResult()">Continue</button>
+                    <button onclick="nextObjection()">Next Objection</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Session Summary -->
+        <div id="summaryScreen" class="game-screen">
+            <div class="session-summary">
+                <h2 style="text-align: center; margin-bottom: 24px;">Session Complete</h2>
+                
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <div class="summary-value" id="summaryReps">0</div>
+                        <div class="summary-label">Reps</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-value" id="summaryAvg">0</div>
+                        <div class="summary-label">Avg Score</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-value" id="summaryCombo">0</div>
+                        <div class="summary-label">Best Combo</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-value" id="summaryTime">0s</div>
+                        <div class="summary-label">Avg Time</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 24px;">
+                    <label>Session Progress</label>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                    </div>
+                    <p style="text-align: center; font-size: 0.85rem; color: #64748b; margin-top: 8px;">
+                        <span id="cleanReps">0</span> clean reps (80+)
+                    </p>
+                </div>
+
+                <button onclick="reset()" style="margin-top: 24px;">New Session</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://shy-firefly-9ac5.joshuaoladipo1.workers.dev';
+        // API key is now secure in Cloudflare Worker
+
+        // Objection Library
+        const OBJECTIONS = {
+            beginner: [
+                { text: "This sounds interesting but we're pretty busy right now.", context: "Discovery call, 3 minutes in", rootCause: "Timing/Need" },
+                { text: "Can you send me some information and I'll review it?", context: "First call, showed mild interest", rootCause: "Process/Authority" },
+                { text: "We're already using something similar.", context: "Outbound call, immediate response", rootCause: "Competition/Need" },
+                { text: "What's the pricing on this?", context: "2 minutes into discovery", rootCause: "Money/Need" },
+                { text: "I need to discuss this with my team first.", context: "End of demo, positive reactions", rootCause: "Authority/Risk" },
+                { text: "This looks good, but we don't have budget right now.", context: "After feature walkthrough", rootCause: "Money/Timing" },
+                { text: "We're happy with our current solution.", context: "Cold outreach response", rootCause: "Need/Competition" },
+                { text: "Can you follow up with me next quarter?", context: "Discovery call, admitted pain exists", rootCause: "Timing/Authority" }
+            ],
+            intermediate: [
+                { text: "I like the idea, but I'm not sure this is the right time.", context: "Admitted problem costs them $50k/year", rootCause: "Timing/Need" },
+                { text: "Send over a proposal and we'll take a look internally.", context: "Good discovery, no next meeting set", rootCause: "Process/Authority" },
+                { text: "We've tried solutions like this before and they didn't work.", context: "Skeptical tone, arms crossed", rootCause: "Trust/Risk" },
+                { text: "This seems expensive for what it does.", context: "Compared to competitor pricing", rootCause: "Money/Trust" },
+                { text: "I'll need to get sign-off from procurement.", context: "You're talking to VP, 30 mins in", rootCause: "Authority/Politics" },
+                { text: "We're in the middle of implementing another project right now.", context: "Different team, different problem", rootCause: "Timing/Effort" },
+                { text: "How do I know this will actually work for us?", context: "Technical buyer, risk-averse", rootCause: "Trust/Risk" },
+                { text: "Your competitor quoted us 30% less.", context: "Late stage, had good calls", rootCause: "Money/Competition" }
+            ],
+            advanced: [
+                { text: "Look, we've seen a lot of vendors promise this stuff. Why should I believe you?", context: "Hostile CFO, burned before", rootCause: "Trust/Risk" },
+                { text: "That's a nice pitch, but I need to focus on what's actually urgent.", context: "You showed clear ROI", rootCause: "Need/Politics" },
+                { text: "I'll be honest - I'm talking to three other vendors and you're all saying the same thing.", context: "Bored tone, multitasking", rootCause: "Competition/Trust" },
+                { text: "My boss will never approve this. You don't know how conservative they are.", context: "Manager-level, seems interested", rootCause: "Authority/Politics" },
+                { text: "We tried something like this 18 months ago and it was a disaster.", context: "Defensive, won't elaborate", rootCause: "Risk/Trust" },
+                { text: "You're asking me to bet my credibility on this. That's not happening without proof.", context: "Senior operator, high stakes", rootCause: "Risk/Trust" },
+                { text: "Even if I wanted to move forward, procurement will tear this apart.", context: "Late in process, unexpected", rootCause: "Politics/Process" },
+                { text: "I don't have time to evaluate this properly right now.", context: "Exec, admitted pain, rushing you", rootCause: "Effort/Authority" }
+            ],
+            elite: [
+                { text: "You're the fifth person to pitch me this month. Why are you different?", context: "Interrupts your intro, dismissive", rootCause: "Competition/Trust" },
+                { text: "I've been in this industry 20 years. You think I haven't heard this before?", context: "Status flex, testing you", rootCause: "Trust/Authority" },
+                { text: "Your solution might work for others, but we're not a typical company.", context: "Intellectualizing, avoiding commitment", rootCause: "Need/Effort" },
+                { text: "Look, I appreciate the call, but we handle this internally. We don't outsource core functions.", context: "Identity/control concern", rootCause: "Risk/Politics" },
+                { text: "I'm going to be blunt - unless you can guarantee results, this conversation is a waste of time.", context: "Exec, zero patience", rootCause: "Risk/Trust" },
+                { text: "We've invested too much in our current system to switch now. Sunk cost or not.", context: "Political/emotional attachment", rootCause: "Effort/Politics" },
+                { text: "You're asking me to create a problem I can solve without you.", context: "Sees through urgency creation", rootCause: "Need/Trust" },
+                { text: "Even if this works perfectly, the internal politics make it impossible.", context: "Defeated tone, knows something you don't", rootCause: "Politics/Risk" }
+            ]
+        };
+
+        // Game State
+        let gameState = {
+            difficulty: 'beginner',
+            timeLimit: 10,
+            currentObjection: null,
+            startTime: null,
+            timerInterval: null,
+            combo: 0,
+            sessionReps: [],
+            todayReps: parseInt(localStorage.getItem('reflex_today_reps') || '0'),
+            currentStreak: parseInt(localStorage.getItem('reflex_streak') || '0'),
+            personalBest: parseInt(localStorage.getItem('reflex_best_combo') || '0'),
+            allTimeScores: JSON.parse(localStorage.getItem('reflex_scores') || '[]')
+        };
+
+        // Initialize
+        updateStats();
+
+        async function testConnection() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = 'Testing...';
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: 'claude-sonnet-4-20250514',
+                        max_tokens: 50,
+                        messages: [{
+                            role: 'user',
+                            content: 'Reply with exactly: Connection successful'
+                        }]
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`API Error ${response.status}: ${errorText.substring(0, 200)}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.content && data.content[0]) {
+                    alert('✅ API Connection Successful!\n\nAPI Response: ' + data.content[0].text.substring(0, 100));
+                } else {
+                    throw new Error('Unexpected response format');
+                }
+                
+            } catch (error) {
+                console.error('Connection test failed:', error);
+                
+                let message = '❌ Connection Test Failed\n\n';
+                
+                if (error.message.includes('Failed to fetch')) {
+                    message += 'Network Error: Cannot reach Anthropic API.\n\n';
+                    message += 'Possible causes:\n';
+                    message += '• No internet connection\n';
+                    message += '• Firewall blocking anthropic.com\n';
+                    message += '• Browser security settings\n';
+                    message += '• VPN/proxy issues\n\n';
+                    message += 'Try: Check internet, disable VPN, or use a different browser';
+                } else if (error.message.includes('401')) {
+                    message += 'API Key Error: Invalid or expired key\n\n';
+                    message += 'The API key may need to be updated.';
+                } else if (error.message.includes('429')) {
+                    message += 'Rate Limit: Too many requests\n\n';
+                    message += 'Wait a few minutes and try again.';
+                } else {
+                    message += 'Error: ' + error.message;
+                }
+                
+                alert(message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Test API Connection';
+            }
+        }
+
+        function selectDifficulty(difficulty) {
+            gameState.difficulty = difficulty;
+            document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.difficulty === difficulty);
+            });
+        }
+
+        function updateTimerValue() {
+            const value = document.getElementById('timerRange').value;
+            document.getElementById('timerValue').textContent = value;
+            gameState.timeLimit = parseInt(value);
+        }
+
+        function startGame() {
+            document.getElementById('setupScreen').style.display = 'none';
+            document.getElementById('gameScreen').classList.add('active');
+            gameState.sessionReps = [];
+            gameState.combo = 0;
+            loadNewObjection();
+        }
+
+        function loadNewObjection() {
+            const objections = OBJECTIONS[gameState.difficulty];
+            gameState.currentObjection = objections[Math.floor(Math.random() * objections.length)];
+            
+            document.getElementById('objectionText').textContent = `"${gameState.currentObjection.text}"`;
+            document.getElementById('objectionContext').textContent = gameState.currentObjection.context;
+            document.getElementById('responseInput').value = '';
+            
+            // Reset submit button
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submit Response';
+            
+            updateWordCount();
+            
+            startTimer();
+        }
+
+        function startTimer() {
+            gameState.startTime = Date.now();
+            let timeLeft = gameState.timeLimit;
+            
+            const timerNumber = document.getElementById('timerNumber');
+            const timerProgress = document.getElementById('timerProgress');
+            const circumference = 2 * Math.PI * 70;
+            
+            // Reset timer visual state
+            timerProgress.classList.remove('warning', 'danger');
+            timerNumber.classList.remove('warning', 'danger');
+            timerNumber.textContent = timeLeft;
+            
+            timerProgress.style.strokeDasharray = circumference;
+            timerProgress.style.strokeDashoffset = 0;
+            
+            clearInterval(gameState.timerInterval);
+            gameState.timerInterval = setInterval(() => {
+                const elapsed = (Date.now() - gameState.startTime) / 1000;
+                timeLeft = gameState.timeLimit - elapsed;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(gameState.timerInterval);
+                    autoSubmit();
+                    return;
+                }
+                
+                timerNumber.textContent = Math.ceil(timeLeft);
+                const progress = (timeLeft / gameState.timeLimit) * circumference;
+                timerProgress.style.strokeDashoffset = circumference - progress;
+                
+                // Color changes
+                timerProgress.classList.remove('warning', 'danger');
+                timerNumber.classList.remove('warning', 'danger');
+                
+                if (timeLeft <= 3) {
+                    timerProgress.classList.add('danger');
+                    timerNumber.classList.add('danger');
+                } else if (timeLeft <= 5) {
+                    timerProgress.classList.add('warning');
+                    timerNumber.classList.add('warning');
+                }
+            }, 100);
+        }
+
+        function updateWordCount() {
+            const text = document.getElementById('responseInput').value.trim();
+            const words = text ? text.split(/\s+/).length : 0;
+            const wordCountEl = document.getElementById('wordCount');
+            wordCountEl.textContent = words;
+            
+            const wordCountContainer = wordCountEl.parentElement;
+            wordCountContainer.classList.remove('warning', 'danger');
+            
+            if (words > 30) {
+                wordCountContainer.classList.add('danger');
+            } else if (words > 20) {
+                wordCountContainer.classList.add('warning');
+            }
+            
+            // Enable submit button as soon as user types something
+            const submitBtn = document.getElementById('submitBtn');
+            if (text.length > 0) {
+                submitBtn.disabled = false;
+            } else {
+                submitBtn.disabled = true;
+            }
+        }
+
+        async function submitResponse() {
+            clearInterval(gameState.timerInterval);
+            const responseTime = (Date.now() - gameState.startTime) / 1000;
+            const response = document.getElementById('responseInput').value.trim();
+            
+            if (!response) {
+                alert('Please enter a response');
+                startTimer();
+                return;
+            }
+            
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('submitBtn').textContent = 'Analyzing...';
+            
+            await scoreResponse(response, responseTime);
+        }
+
+        function autoSubmit() {
+            // Timer ran out - stop the timer but let user manually submit to see score
+            const timerNumber = document.getElementById('timerNumber');
+            timerNumber.textContent = '0';
+            timerNumber.classList.add('danger');
+            
+            const timerProgress = document.getElementById('timerProgress');
+            timerProgress.classList.add('danger');
+            
+            const response = document.getElementById('responseInput').value.trim();
+            
+            // Keep submit button enabled so they can click to see results
+            const submitBtn = document.getElementById('submitBtn');
+            if (response) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Analyze Answer (Time Expired)';
+            } else {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'No Response';
+            }
+        }
+
+        async function scoreResponse(response, responseTime) {
+            const prompt = `You are grading a sales objection response based on THE SALES DOCTRINE - not generic sales tactics.
+
+THE SALES DOCTRINE (Core Principles):
+1. DISQUALIFICATION > PERSUASION - Walking away from bad fits is professional, not failure
+2. DIAGNOSIS > PITCHING - Understand their problem before offering solutions  
+3. QUESTION-DRIVEN - Ask diagnostic questions, don't defend or pitch
+4. ROOT CAUSE THINKING - Distinguish surface objections from underlying issues
+5. ECONOMIC BUYER FOCUS - Don't waste time with people who can't buy
+6. NO FREE CONSULTING - Information has value; qualify before giving
+
+OBJECTION: "${gameState.currentObjection.text}"
+CONTEXT: ${gameState.currentObjection.context}
+ACTUAL ROOT CAUSE: ${gameState.currentObjection.rootCause}
+
+REP'S RESPONSE: "${response}"
+RESPONSE TIME: ${responseTime.toFixed(1)}s (limit was ${gameState.timeLimit}s)
+
+GRADING CRITERIA (0-100):
+
+1. DOCTRINE ALIGNMENT (0-35 points):
+   - Did they qualify or pitch?
+   - Did they ask questions or defend?
+   - Did they diagnose or comply?
+   - Did they protect their time/expertise?
+   FULL CREDIT: Asked diagnostic questions to understand root cause or disqualify
+   PARTIAL CREDIT: Asked questions but missed deeper diagnosis
+   ZERO CREDIT: Defended, pitched, or complied without qualification
+
+2. ROOT CAUSE DIAGNOSIS (0-30 points):
+   - The stated root cause is: ${gameState.currentObjection.rootCause}
+   - But MULTIPLE diagnostic paths can be valid
+   - Did they probe ANY legitimate root cause (authority, urgency, budget, process, pain)?
+   FULL CREDIT: Probed the actual root cause OR another valid diagnostic angle
+   PARTIAL CREDIT: Asked qualifying questions that could lead to root cause
+   ZERO CREDIT: Didn't diagnose at all, just reacted
+
+3. EXECUTION (0-20 points):
+   - Response time: ${responseTime.toFixed(1)}s (target: <${gameState.timeLimit}s)
+   - Word count: ${response.split(/\s+/).length} (target: <20 words)
+   - Clarity: Was the question sharp and specific?
+
+4. QUESTION QUALITY (0-15 points):
+   - Did they ask a DIAGNOSTIC question or a WEAK question?
+   DIAGNOSTIC: "Who else is reviewing?", "What happens if you don't fix this by Q2?", "What's driving you to look now?"
+   WEAK: "What are your pain points?", "What features do you need?", "Can I schedule a demo?"
+
+SCORING GUIDE:
+90-100: A - Doctrine-perfect response
+80-89: B - Strong doctrine alignment, minor execution issues
+70-79: C - Decent attempt, missed deeper diagnosis
+60-69: D - Wrong approach or too defensive
+0-59: F - Pitched, defended, or gave away value without qualifying
+
+RESPOND IN THIS FORMAT:
+
+GRADE: [A/B/C/D/F]
+TOTAL_SCORE: [0-100]
+DOCTRINE_SCORE: [0-35]
+ROOT_CAUSE_SCORE: [0-30]
+EXECUTION_SCORE: [0-20]
+QUESTION_SCORE: [0-15]
+
+WHAT_THEY_DID:
+[2-3 sentences: What did they actually do? Did they qualify, diagnose, pitch, defend, or comply? Be specific about their approach.]
+
+BETTER_MOVE:
+[2-3 sentences: What would be even sharper? Give a specific alternative response that's more doctrine-aligned. If they did well, suggest how to go even deeper.]
+
+DOCTRINE NOTES:
+[1-2 sentences: How well did this align with the doctrine principles? What did they do right or wrong from a doctrine perspective?]`;
+
+            try {
+                const aiResponse = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: 'claude-sonnet-4-20250514',
+                        max_tokens: 500,
+                        messages: [{
+                            role: 'user',
+                            content: prompt
+                        }]
+                    })
+                });
+
+                if (!aiResponse.ok) {
+                    const errorText = await aiResponse.text();
+                    console.error('API Error:', aiResponse.status, errorText);
+                    throw new Error(`API returned ${aiResponse.status}: ${errorText.substring(0, 100)}`);
+                }
+
+                const data = await aiResponse.json();
+                
+                if (!data.content || !data.content[0] || !data.content[0].text) {
+                    console.error('Unexpected API response:', data);
+                    throw new Error('Invalid API response format');
+                }
+                
+                const result = parseScoreResponse(data.content[0].text, responseTime);
+                
+                showResult(result);
+                saveRep(result);
+                
+            } catch (error) {
+                console.error('Full error:', error);
+                
+                // Better error messages
+                let errorMsg = 'Scoring failed: ';
+                if (error.message.includes('Failed to fetch')) {
+                    errorMsg += 'Network error. Check your internet connection or try again.';
+                } else if (error.message.includes('401')) {
+                    errorMsg += 'API key issue. The key may be invalid or expired.';
+                } else if (error.message.includes('429')) {
+                    errorMsg += 'Rate limit hit. Wait a moment and try again.';
+                } else {
+                    errorMsg += error.message;
+                }
+                
+                alert(errorMsg);
+                document.getElementById('submitBtn').disabled = false;
+                document.getElementById('submitBtn').textContent = 'Submit Response';
+                startTimer(); // Restart timer so they can try again
+            }
+        }
+
+        function parseScoreResponse(text, responseTime) {
+            const lines = text.split('\n');
+            const result = {
+                grade: 'C',
+                time: responseTime.toFixed(1),
+                doctrineScore: 'Unknown',
+                rootCauseScore: 'Unknown',
+                executionScore: 'Unknown',
+                questionScore: 'Unknown',
+                feedbackWhat: '',
+                feedbackBetter: '',
+                feedbackDoctrine: '',
+                score: 0
+            };
+            
+            let section = '';
+            
+            for (const line of lines) {
+                if (line.includes('GRADE:')) result.grade = line.split(':')[1].trim();
+                else if (line.includes('TOTAL_SCORE:')) result.score = parseInt(line.match(/\d+/)?.[0] || 0);
+                else if (line.includes('DOCTRINE_SCORE:')) result.doctrineScore = line.split(':')[1]?.trim() || 'Unknown';
+                else if (line.includes('ROOT_CAUSE_SCORE:')) result.rootCauseScore = line.split(':')[1]?.trim() || 'Unknown';
+                else if (line.includes('EXECUTION_SCORE:')) result.executionScore = line.split(':')[1]?.trim() || 'Unknown';
+                else if (line.includes('QUESTION_SCORE:')) result.questionScore = line.split(':')[1]?.trim() || 'Unknown';
+                else if (line.includes('WHAT_THEY_DID:')) section = 'what';
+                else if (line.includes('BETTER_MOVE:')) section = 'better';
+                else if (line.includes('DOCTRINE NOTES:')) section = 'doctrine';
+                else if (section === 'what' && line.trim() && !line.includes('BETTER_MOVE') && !line.includes('DOCTRINE NOTES')) {
+                    result.feedbackWhat += line.trim() + ' ';
+                }
+                else if (section === 'better' && line.trim() && !line.includes('DOCTRINE NOTES')) {
+                    result.feedbackBetter += line.trim() + ' ';
+                }
+                else if (section === 'doctrine' && line.trim()) {
+                    result.feedbackDoctrine += line.trim() + ' ';
+                }
+            }
+            
+            return result;
+        }
+
+        function showResult(result) {
+            document.getElementById('resultGrade').textContent = result.grade;
+            document.getElementById('resultGrade').className = `result-grade ${getGradeClass(result.grade)}`;
+            
+            document.getElementById('resultTime').textContent = result.time + 's';
+            document.getElementById('resultDoctrine').textContent = result.doctrineScore;
+            document.getElementById('resultRootCause').textContent = result.rootCauseScore;
+            document.getElementById('resultExecution').textContent = result.executionScore;
+            document.getElementById('resultQuestion').textContent = result.questionScore;
+            
+            document.getElementById('feedbackWhat').textContent = result.feedbackWhat;
+            document.getElementById('feedbackBetter').textContent = result.feedbackBetter;
+            document.getElementById('feedbackDoctrine').textContent = result.feedbackDoctrine || 'No additional doctrine notes.';
+            
+            document.getElementById('resultOverlay').classList.add('active');
+        }
+
+        function getGradeClass(grade) {
+            if (grade === 'A') return 'perfect';
+            if (grade === 'B') return 'good';
+            if (grade === 'C') return 'ok';
+            return 'poor';
+        }
+
+        function saveRep(result) {
+            gameState.sessionReps.push(result);
+            
+            // Update combo
+            if (result.score >= 80) {
+                gameState.combo++;
+                if (gameState.combo > gameState.personalBest) {
+                    gameState.personalBest = gameState.combo;
+                    localStorage.setItem('reflex_best_combo', gameState.personalBest);
+                }
+                showCombo();
+            } else {
+                gameState.combo = 0;
+                hideCombo();
+            }
+            
+            // Update today's reps
+            gameState.todayReps++;
+            localStorage.setItem('reflex_today_reps', gameState.todayReps);
+            
+            // Update all-time scores
+            gameState.allTimeScores.push(result.score);
+            if (gameState.allTimeScores.length > 100) {
+                gameState.allTimeScores = gameState.allTimeScores.slice(-100);
+            }
+            localStorage.setItem('reflex_scores', JSON.stringify(gameState.allTimeScores));
+            
+            updateStats();
+        }
+
+        function showCombo() {
+            const comboDisplay = document.getElementById('comboDisplay');
+            const comboNumber = document.getElementById('comboNumber');
+            
+            comboNumber.textContent = gameState.combo;
+            comboDisplay.style.display = 'block';
+        }
+
+        function hideCombo() {
+            document.getElementById('comboDisplay').style.display = 'none';
+        }
+
+        function updateStats() {
+            document.getElementById('todayReps').textContent = gameState.todayReps;
+            document.getElementById('currentStreak').textContent = gameState.combo;
+            document.getElementById('personalBest').textContent = gameState.personalBest;
+            
+            if (gameState.allTimeScores.length > 0) {
+                const avg = gameState.allTimeScores.reduce((a, b) => a + b, 0) / gameState.allTimeScores.length;
+                document.getElementById('avgScore').textContent = Math.round(avg);
+            }
+        }
+
+        function closeResult() {
+            document.getElementById('resultOverlay').classList.remove('active');
+        }
+
+        function nextObjection() {
+            closeResult();
+            document.getElementById('submitBtn').disabled = false;
+            document.getElementById('submitBtn').textContent = 'Submit Response';
+            loadNewObjection();
+        }
+
+        function endSession() {
+            if (gameState.sessionReps.length === 0) {
+                reset();
+                return;
+            }
+            
+            clearInterval(gameState.timerInterval);
+            
+            const avgScore = Math.round(
+                gameState.sessionReps.reduce((sum, r) => sum + r.score, 0) / gameState.sessionReps.length
+            );
+            const avgTime = (
+                gameState.sessionReps.reduce((sum, r) => sum + parseFloat(r.time), 0) / gameState.sessionReps.length
+            ).toFixed(1);
+            const cleanReps = gameState.sessionReps.filter(r => r.score >= 80).length;
+            const bestCombo = Math.max(...gameState.sessionReps.map((_, i) => {
+                let combo = 0;
+                for (let j = i; j < gameState.sessionReps.length; j++) {
+                    if (gameState.sessionReps[j].score >= 80) combo++;
+                    else break;
+                }
+                return combo;
+            }));
+            
+            document.getElementById('summaryReps').textContent = gameState.sessionReps.length;
+            document.getElementById('summaryAvg').textContent = avgScore;
+            document.getElementById('summaryCombo').textContent = bestCombo;
+            document.getElementById('summaryTime').textContent = avgTime + 's';
+            document.getElementById('cleanReps').textContent = cleanReps;
+            
+            const progressPercent = (cleanReps / gameState.sessionReps.length) * 100;
+            document.getElementById('progressFill').style.width = progressPercent + '%';
+            
+            document.getElementById('gameScreen').classList.remove('active');
+            document.getElementById('summaryScreen').classList.add('active');
+        }
+
+        function reset() {
+            document.getElementById('summaryScreen').classList.remove('active');
+            document.getElementById('setupScreen').style.display = 'block';
+            gameState.combo = 0;
+            hideCombo();
+        }
+
+        // Check if it's a new day
+        const lastDate = localStorage.getItem('reflex_last_date');
+        const today = new Date().toDateString();
+        if (lastDate !== today) {
+            localStorage.setItem('reflex_today_reps', '0');
+            localStorage.setItem('reflex_last_date', today);
+            gameState.todayReps = 0;
+            updateStats();
+        }
+    </script>
+</body>
+</html>
